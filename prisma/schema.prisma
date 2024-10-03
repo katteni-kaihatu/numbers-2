@@ -1,0 +1,44 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Ticket {
+  id            Int      @id @default(autoincrement()) // チケットID
+  number        String   @unique // チケット番号（ユニーク）
+  isWinner      Boolean  @default(false) // 当選フラグ
+  purchaseDate  DateTime @default(now()) // 購入日
+  amount        Int // 購入金額
+  isRefunded    Boolean  @default(false) // 返金フラグ
+  refoundAmount Int? // 返金金額
+  user          User     @relation(fields: [userId], references: [id]) // ユーザーとのリレーション
+  term          Term     @relation(fields: [termId], references: [id]) // どの抽選に紐づいているか（Termとのリレーション）
+  userId        String
+  termId        Int
+}
+
+model User {
+  id      String   @id @unique // ユーザーID
+  tickets Ticket[] // ユーザーが所持するチケット
+}
+
+model Term {
+  id             Int      @id @default(autoincrement()) // Term ID
+  name           String?  @unique // Term名（ユニーク）
+  drawDate       DateTime @default(now()) // 抽選日
+  isClosed       Boolean  @default(false) // 締め切りフラグ
+  isDrawn        Boolean  @default(false) // 抽選済みフラグ
+  isPaidOut      Boolean  @default(false) // 払い戻し済みフラグ
+  winningNumbers String? // 当選番号（0-9の一桁の整数のString）
+  tickets        Ticket[] // そのTermに紐づくチケット
+}
